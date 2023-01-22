@@ -20,7 +20,7 @@ public class UserProfileService {
         return userProfileDataAccessService.getUserProfiles();
     }
 
-    public void uploadUserProfileImage(UUID userProfileId, MultipartFile file) {
+    void uploadUserProfileImage(UUID userProfileId, MultipartFile file) {
         // check image is not empty
         // if file is an image
         // does the user exist in db
