@@ -9,7 +9,11 @@ import org.springframework.context.annotation.Configuration;
 public class AmazonConfig {
 
     @Bean
+//    public AmazonS3 s3() {
+//        return AmazonS3ClientBuilder.defaultClient();
+//    }
     public AmazonS3 s3() {
-        return AmazonS3ClientBuilder.defaultClient();
+        AmazonS3 AmazonS3 = null;
+        return AmazonS3;
     }
 }

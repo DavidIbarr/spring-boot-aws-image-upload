@@ -25,6 +25,7 @@ public class FileStore {
             Optional<Map<String, String>> optionalMetadata,
             InputStream inputStream
     ) {
+        // save the optional metadata to a new object
         ObjectMetadata objectMetadata = new ObjectMetadata();
         optionalMetadata.ifPresent(map -> {
             if(!map.isEmpty()) {
