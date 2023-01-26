@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+import static org.apache.http.entity.ContentType.IMAGE_GIF;
+
 @Service
 public class UserProfileService {
     private final UserProfileDataAccessService userProfileDataAccessService;
@@ -28,14 +30,9 @@ public class UserProfileService {
 
     void uploadUserProfileImage(UUID userProfileId, MultipartFile file) {
         // check image is not empty
-        if(file.isEmpty()){
-            throw new IllegalStateException("Cannot upload empty file [ " + file.getSize() + " ]");
-
-        }
+        isFileEmpty(file);
         // if file is an image
-        if(!Arrays.asList(ContentType.IMAGE_JPEG, ContentType.IMAGE_PNG).contains(file.getContentType())){
-            throw new IllegalStateException("File must be one of the following types: jpeg, png");
-        }
+        isImage(file);
         // does the user exist in db
         UserProfile user = userProfileDataAccessService
                 .getUserProfiles()
@@ -46,17 +43,39 @@ public class UserProfileService {
                     new IllegalStateException(String.format("User profile %s not found", userProfileId))
                 );
         // retrieve metadata from file
-        Map<String, String> metadata = new HashMap<>();
-        metadata.put("Content-Type", file.getContentType());
-        metadata.put("Content-Length",String.valueOf(file.getSize()));
+        Map<String, String> metadata = extractMetadata(file);
 
         // store image in s3, and update db with the s3 image link
         String path = String.format("%s/%s", BucketName.PROFILE_IMAGE.getBucketName(), user.getUserProfileId());
-        String filename = String.format("%s-%s", file.getName(), UUID.randomUUID());
+        String filename = String.format("%s-%s", file.getOriginalFilename(), UUID.randomUUID());
         try {
             fileStore.save(file.getOriginalFilename(), file.getName(), Optional.of(metadata), file.getInputStream());
         } catch (IOException e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    private Map<String, String> extractMetadata(MultipartFile file) {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("Content-Type", file.getContentType());
+        metadata.put("Content-Length",String.valueOf(file.getSize()));
+        return metadata;
+    }
+
+    private void isImage(MultipartFile file) {
+        if(!Arrays.asList(
+                ContentType.IMAGE_JPEG.getMimeType(),
+                ContentType.IMAGE_PNG.getMimeType(),
+                IMAGE_GIF.getMimeType())
+                .contains(file.getContentType())
+        ){
+            throw new IllegalStateException("File must be one of the following types: jpeg, png");
+        }
+    }
+
+    private void isFileEmpty(MultipartFile file) {
+        if(file.isEmpty()){
+            throw new IllegalStateException("Cannot upload empty file [ " + file.getSize() + " ]");
         }
     }
 }
