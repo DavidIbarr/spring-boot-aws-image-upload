@@ -34,14 +34,7 @@ public class UserProfileService {
         // if file is an image
         isImage(file);
         // does the user exist in db
-        UserProfile user = userProfileDataAccessService
-                .getUserProfiles()
-                .stream()
-                .filter(userProfile -> userProfile.getUserProfileId().equals(userProfileId))
-                .findFirst()
-                .orElseThrow(() ->
-                    new IllegalStateException(String.format("User profile %s not found", userProfileId))
-                );
+        UserProfile user = getUserProfileOrThrow(userProfileId);
         // retrieve metadata from file
         Map<String, String> metadata = extractMetadata(file);
 
@@ -50,9 +43,30 @@ public class UserProfileService {
         String filename = String.format("%s-%s", file.getOriginalFilename(), UUID.randomUUID());
         try {
             fileStore.save(file.getOriginalFilename(), file.getName(), Optional.of(metadata), file.getInputStream());
+            user.setUserProfileImageLink(filename);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    public byte[] downloadUserProfileImage(UUID userProfileId) {
+        UserProfile user = getUserProfileOrThrow(userProfileId);
+        String fullPath = String.format("%s/%s/%s",
+                BucketName.PROFILE_IMAGE.getBucketName(),
+                user.getUserProfileId(),
+                user.getUserProfileImageLink());
+        return fileStore.download(fullPath);
+    }
+
+    private UserProfile getUserProfileOrThrow(UUID userProfileId) {
+        UserProfile user = userProfileDataAccessService
+                .getUserProfiles()
+                .stream()
+                .filter(userProfile -> userProfile.getUserProfileId().equals(userProfileId))
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalStateException(String.format("User profile %s not found", userProfileId)));
+        return user;
     }
 
     private Map<String, String> extractMetadata(MultipartFile file) {

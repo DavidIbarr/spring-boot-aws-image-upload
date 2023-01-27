@@ -45,4 +45,12 @@ public class FileStore {
 //            throw new IllegalStateException("Failed to store file to s3", e);
 //        }
     }
+
+    public byte[] download(String fullPath) {
+        try {
+            return s3.getObject()
+        } catch(AmazonServiceException e) {
+            throw new IllegalStateException("Failed to download file", e);
+        }
+    }
 }
