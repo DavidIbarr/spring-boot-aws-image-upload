@@ -51,11 +51,12 @@ public class UserProfileService {
 
     public byte[] downloadUserProfileImage(UUID userProfileId) {
         UserProfile user = getUserProfileOrThrow(userProfileId);
-        String fullPath = String.format("%s/%s/%s",
+        String path = String.format("%s/%s",
                 BucketName.PROFILE_IMAGE.getBucketName(),
-                user.getUserProfileId(),
-                user.getUserProfileImageLink());
-        return fileStore.download(fullPath);
+                user.getUserProfileId());
+        return user.getUserProfileImageLink()
+                .map(key -> fileStore.download(path, key))
+                .orElse(new byte[0]);
     }
 
     private UserProfile getUserProfileOrThrow(UUID userProfileId) {

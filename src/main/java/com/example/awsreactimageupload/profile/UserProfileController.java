@@ -32,7 +32,7 @@ public class UserProfileController {
     )
     public void uploadUserProfileImage(
             @PathVariable("userProfileId") UUID userProfileId,
-            @RequestParam("file")MultipartFile file) {
+            @RequestParam("file") MultipartFile file) {
         userProfileService.uploadUserProfileImage(userProfileId, file);
     }
 
